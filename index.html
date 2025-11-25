@@ -509,6 +509,79 @@
             element.innerHTML = message; // Используем innerHTML для эмодзи
             element.className = `result ${isSuccess ? 'success' : 'error'}`;
         }
+        // Функция диагностики
+        async function runDiagnostics() {
+            try {
+                showResult('diagnosticResult', '🔄 Запускаем диагностику...', true);
+                
+                const response = await fetch(`${EMAIL_API}/diagnostic/status`);
+                const status = await response.json();
+                
+                let diagnosticInfo = `🔧 ДИАГНОСТИКА СЕРВИСА:\n\n`;
+                diagnosticInfo += `✅ Сервис: ${status.service}\n`;
+                diagnosticInfo += `📊 Статус: ${status.status}\n`;
+                diagnosticInfo += `👤 Текущий email: ${status.currentUserEmail}\n`;
+                diagnosticInfo += `🛠️ Тип сервиса: ${status.serviceType}\n\n`;
+                
+                diagnosticInfo += `⚙️ НАСТРОЙКИ SMTP:\n`;
+                diagnosticInfo += `• Сервер: ${status.smtpSettings.server}\n`;
+                diagnosticInfo += `• Порт: ${status.smtpSettings.port}\n`;
+                diagnosticInfo += `• Email отправителя: ${status.smtpSettings.fromEmail}\n`;
+                diagnosticInfo += `• SSL: ${status.smtpSettings.enableSsl}\n\n`;
+                
+                diagnosticInfo += `🌐 ОКРУЖЕНИЕ:\n`;
+                diagnosticInfo += `• Режим: ${status.environment.ASPNETCORE_ENVIRONMENT}\n`;
+                diagnosticInfo += `• SMTP сервер: ${status.environment.SmtpSettings__Server}\n`;
+                
+                showResult('diagnosticResult', diagnosticInfo, true);
+                
+            } catch (error) {
+                showResult('diagnosticResult', '❌ Ошибка диагностики: ' + error.message, false);
+            }
+        }
+        
+        // Тест SMTP подключения
+        async function testSmtpConnection() {
+            try {
+                showResult('diagnosticResult', '🔄 Тестируем SMTP подключение...', true);
+                
+                const response = await fetch(`${EMAIL_API}/diagnostic/test-smtp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('diagnosticResult', `✅ SMTP тест пройден: ${result.message}`, true);
+                } else {
+                    showResult('diagnosticResult', `❌ SMTP тест не пройден: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('diagnosticResult', '❌ Ошибка теста SMTP: ' + error.message, false);
+            }
+        }
+        
+        // Функция для проверки логов email
+        async function checkEmailLogs() {
+            try {
+                const response = await fetch(`${EMAIL_API}/logs`);
+                const logs = await response.json();
+                
+                let logInfo = `📧 ПОСЛЕДНИЕ ОТПРАВКИ:\n\n`;
+                if (logs.length > 0) {
+                    logs.slice(0, 5).forEach(log => {
+                        logInfo += `• ${log.sentAt}: ${log.to} - ${log.subject} - ${log.status}\n`;
+                    });
+                } else {
+                    logInfo += 'Нет записей в логах';
+                }
+                
+                alert(logInfo);
+            } catch (error) {
+                alert('Ошибка получения логов: ' + error.message);
+            }
+        }
 
         // Запуск
         loadSecurities();
@@ -518,5 +591,6 @@
     </script>
 </body>
 </html>
+
 
 
