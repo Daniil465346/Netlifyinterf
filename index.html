@@ -157,13 +157,20 @@
     <div class="dashboard">
         <!-- Левая колонка -->
         <div>
+            <!-- Обновленная секция уведомлений -->
             <div class="section">
-                <h3>📧 Уведомления</h3>
-                <div class="email-info">
-                    <strong>Все уведомления отправляются на:</strong><br>
-                    <span style="color: #007bff; font-weight: bold; font-size: 18px;">kuzminovdaniil4@gmail.com</span>
+                <h3>📧 Управление уведомлениями</h3>
+                <div class="api-status">
+                    <span>Текущий email:</span>
+                    <span id="currentEmail">Загрузка...</span>
                 </div>
-                <button onclick="sendTestEmail()">Отправить тестовое письмо</button>
+                <div class="api-status">
+                    <span>Обновлен:</span>
+                    <span id="emailUpdatedAt">-</span>
+                </div>
+                <input type="email" id="userEmail" placeholder="Введите новый email для уведомлений">
+                <button onclick="setUserEmail()">💾 Сохранить email</button>
+                <button onclick="sendTestEmail()">🧪 Отправить тестовое письмо</button>
                 <div id="emailResult" class="result"></div>
             </div>
 
@@ -455,12 +462,97 @@
             element.textContent = message;
             element.className = `result ${isSuccess ? 'success' : 'error'}`;
         }
+        // Загрузка текущего email
+        async function loadCurrentEmail() {
+            try {
+                const response = await fetch(`${EMAIL_API}/current-email`);
+                const data = await response.json();
+                
+                document.getElementById('currentEmail').textContent = data.email;
+                document.getElementById('emailUpdatedAt').textContent = 
+                    new Date(data.updatedAt).toLocaleString();
+                    
+                if (data.isDefault) {
+                    document.getElementById('currentEmail').innerHTML += 
+                        ' <small style="color: orange;">(по умолчанию)</small>';
+                }
+            } catch (error) {
+                document.getElementById('currentEmail').textContent = 'Ошибка загрузки';
+                console.error('Ошибка загрузки email:', error);
+            }
+        }
+        
+        // Установка нового email
+        async function setUserEmail() {
+            const email = document.getElementById('userEmail').value.trim();
+            
+            if (!email || !email.includes('@')) {
+                showResult('emailResult', '❌ Пожалуйста, введите корректный email адрес', false);
+                return;
+            }
+        
+            try {
+                showResult('emailResult', '🔄 Сохраняем email...', true);
+                
+                const response = await fetch(`${EMAIL_API}/set-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+        
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('emailResult', `✅ ${result.message}`, true);
+                    document.getElementById('currentEmail').textContent = email;
+                    document.getElementById('emailUpdatedAt').textContent = 
+                        new Date(result.updatedAt).toLocaleString();
+                    document.getElementById('userEmail').value = '';
+                    
+                    // Обновляем историю операций чтобы показать новый email
+                    setTimeout(() => {
+                        showResult('emailResult', 
+                            '📧 Теперь все уведомления будут приходить на этот email!', true);
+                    }, 2000);
+                } else {
+                    showResult('emailResult', `❌ Ошибка: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('emailResult', '❌ Ошибка соединения с сервисом', false);
+            }
+        }
+        
+        // Отправка тестового письма
+        async function sendTestEmail() {
+            try {
+                showResult('emailResult', '🔄 Отправляем тестовое письмо...', true);
+                
+                const response = await fetch(`${EMAIL_API}/send-test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+        
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('emailResult', 
+                        `✅ Тестовое письмо отправлено на текущий email!\n\n${result.message}`, 
+                        true);
+                } else {
+                    showResult('emailResult', `❌ Ошибка отправки: ${result.message}`, false);
+                }
+            } catch (error) {
+                showResult('emailResult', '❌ Ошибка соединения с сервисом', false);
+            }
+        }
 
         // Запуск
         loadSecurities();
         checkServices();
         getActiveTriggers();
         getOperations();
+        loadCurrentEmail();
     </script>
 </body>
 </html>
+
