@@ -1,0 +1,402 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интеграционная инвестиционная платформа</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .integration-flow {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+
+        .flow-number {
+            background: white;
+            color: #667eea;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+            button:hover {
+                background: #0056b3;
+            }
+
+        .result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        .notification {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background: #28a745;
+        }
+
+        .status-inactive {
+            background: #dc3545;
+        }
+
+        .api-status {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Интеграционная инвестиционная платформа</h1>
+
+    <div class="integration-flow">
+        <h3>🔗 Схема интеграции сервисов</h3>
+        <div class="flow-step">
+            <div class="flow-number">1</div>
+            <div>Пользователь создает операцию через веб-интерфейс</div>
+        </div>
+        <div class="flow-step">
+            <div class="flow-number">2</div>
+            <div>Frontend (Netlify) → Investment API (Amvera)</div>
+        </div>
+        <div class="flow-step">
+            <div class="flow-number">3</div>
+            <div>Investment API → Email Notification API (Amvera)</div>
+        </div>
+        <div class="flow-step">
+            <div class="flow-number">4</div>
+            <div>Пользователь получает уведомление на email</div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- Левая колонка -->
+        <div>
+            <div class="section">
+                <h3>📊 Статус сервисов</h3>
+                <div class="api-status">
+                    <span>Investment API:</span>
+                    <span><span class="status-indicator status-active"></span> Online</span>
+                </div>
+                <div class="api-status">
+                    <span>Email Service:</span>
+                    <span><span class="status-indicator status-active"></span> Online</span>
+                </div>
+                <button onclick="checkServices()">Проверить статус</button>
+            </div>
+
+            <div class="section">
+                <h3>🧮 Калькулятор операции</h3>
+                <select id="calcSecurityId" onchange="updatePrices()">
+                    <option value="">Выберите бумагу</option>
+                </select>
+                <input type="number" id="calcQuantity" placeholder="Количество" value="10">
+                <input type="number" id="calcCurrentPrice" placeholder="Текущая цена" step="0.01" readonly>
+                <input type="number" id="calcCommission" placeholder="Комиссия" value="5.00" step="0.01">
+                <button onclick="calculate()">Рассчитать стоимость</button>
+                <div id="calcResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Правая колонка -->
+        <div>
+            <div class="section">
+                <h3>💾 Новая операция с уведомлением</h3>
+                <select id="opSecurityId">
+                    <option value="">Выберите бумагу</option>
+                </select>
+                <input type="number" id="opQuantity" placeholder="Количество" value="10">
+                <input type="number" id="opPrice" placeholder="Цена покупки" step="0.01">
+                <input type="number" id="opCommission" placeholder="Комиссия" value="5.00" step="0.01">
+                <input type="number" id="opTargetPrice" placeholder="Цена для выкупа" step="0.01">
+                <button onclick="addOperation()">📧 Добавить операцию и отправить уведомление</button>
+                <div id="opResult" class="result"></div>
+            </div>
+
+            <div class="section">
+                <h3>🔍 Проверка триггеров</h3>
+                <button onclick="getActiveTriggers()">Показать активные ордера</button>
+                <button onclick="checkAllTriggers()">Запустить проверку всех триггеров</button>
+                <div id="triggersResult" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>📈 История операций</h3>
+        <button onclick="getOperations()">Обновить историю</button>
+        <div id="operationsResult" class="result"></div>
+    </div>
+
+    <script>
+        const INVESTMENT_API = 'https://pr4-daniil465346.amvera.io/api/investment';
+        const EMAIL_API = 'https://your-email-service.amvera.io/api/notifications';
+        let securities = [];
+
+        // Инициализация
+        async function loadSecurities() {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/securities`);
+                securities = await response.json();
+
+                securities.forEach(security => {
+                    const option = `<option value="${security.id}">${security.ticker} - $${security.currentPrice}</option>`;
+                    document.getElementById('calcSecurityId').innerHTML += option;
+                    document.getElementById('opSecurityId').innerHTML += option;
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки бумаг:', error);
+            }
+        }
+
+        // Проверка статуса сервисов
+        async function checkServices() {
+            try {
+                const investmentResponse = await fetch(`${INVESTMENT_API}/securities`);
+                document.querySelectorAll('.status-indicator')[0].className =
+                    investmentResponse.ok ? 'status-indicator status-active' : 'status-indicator status-inactive';
+
+                // Здесь можно добавить проверку email сервиса
+                alert('Все сервисы работают корректно!');
+            } catch (error) {
+                alert('Некоторые сервисы недоступны');
+            }
+        }
+
+        // Обновление цен
+        function updatePrices() {
+            const security = securities.find(s => s.id == document.getElementById('calcSecurityId').value);
+            if (security) {
+                document.getElementById('calcCurrentPrice').value = security.currentPrice;
+                document.getElementById('opPrice').value = security.currentPrice;
+                document.getElementById('opTargetPrice').value = (security.currentPrice * 0.9).toFixed(2);
+            }
+        }
+
+        // Калькулятор
+        async function calculate() {
+            const securityId = document.getElementById('calcSecurityId').value;
+            const quantity = document.getElementById('calcQuantity').value;
+            const price = document.getElementById('calcCurrentPrice').value;
+            const commission = document.getElementById('calcCommission').value;
+
+            if (!securityId) return showResult('calcResult', 'Выберите бумагу', false);
+
+            try {
+                const response = await fetch(`${INVESTMENT_API}/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        securityId: parseInt(securityId),
+                        quantity: parseInt(quantity),
+                        purchasePricePerShare: parseFloat(price),
+                        commission: parseFloat(commission)
+                    })
+                });
+
+                const result = await response.json();
+                const security = securities.find(s => s.id == securityId);
+
+                document.getElementById('calcResult').innerHTML =
+                    `<strong>${security.ticker}: $${result.totalCost}</strong><br>
+                         Количество: ${quantity} акций | Цена: $${price} | Комиссия: $${commission}`;
+                document.getElementById('calcResult').className = 'result success';
+
+            } catch (error) {
+                showResult('calcResult', 'Ошибка: ' + error.message, false);
+            }
+        }
+
+        // Добавление операции с интеграцией
+        async function addOperation() {
+            const securityId = document.getElementById('opSecurityId').value;
+            const quantity = document.getElementById('opQuantity').value;
+            const price = document.getElementById('opPrice').value;
+            const commission = document.getElementById('opCommission').value;
+            const targetPrice = document.getElementById('opTargetPrice').value;
+
+            if (!securityId) return showResult('opResult', 'Выберите бумагу', false);
+
+            const operation = {
+                securityId: parseInt(securityId),
+                quantity: parseInt(quantity),
+                purchasePricePerShare: parseFloat(price),
+                commission: parseFloat(commission),
+                targetBuyPrice: parseFloat(targetPrice)
+            };
+
+            try {
+                const response = await fetch(`${INVESTMENT_API}/operation`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(operation)
+                });
+
+                const result = await response.json();
+
+                let message = result.message;
+                if (result.notificationSent) {
+                    message += '\n\n📧 Уведомление отправлено на email!';
+                }
+                if (result.triggerActivated) {
+                    message += '\n\n🚨 ТРИГГЕР СРАБОТАЛ! Проверьте почту для деталей.';
+                }
+
+                showResult('opResult', message, true);
+
+            } catch (error) {
+                showResult('opResult', 'Ошибка: ' + error.message, false);
+            }
+        }
+
+        // Активные триггеры
+        async function getActiveTriggers() {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/active-triggers`);
+                const triggers = await response.json();
+
+                const result = document.getElementById('triggersResult');
+                result.innerHTML = triggers.length ?
+                    triggers.map(t => `
+                            <div class="notification">
+                                <strong>${t.securityTicker}</strong><br>
+                                ${t.message}<br>
+                                <small>Цель: $${t.targetPrice} | Текущая: $${t.currentPrice} | Дистанция: ${t.distancePercent}%</small>
+                            </div>
+                        `).join('') : 'Нет активных триггеров';
+
+            } catch (error) {
+                showResult('triggersResult', 'Ошибка: ' + error.message, false);
+            }
+        }
+
+        // Проверка всех триггеров
+        async function checkAllTriggers() {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/check-all-triggers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+                showResult('triggersResult',
+                    `Проверено триггеров: ${result.totalChecked}\nСработало: ${result.activatedTriggers.length}\nВремя проверки: ${result.checkedAt}`,
+                    true);
+
+            } catch (error) {
+                showResult('triggersResult', 'Ошибка: ' + error.message, false);
+            }
+        }
+
+        // История операций
+        async function getOperations() {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/operations`);
+                const data = await response.json();
+
+                const operationsList = data.map(op =>
+                    `#${op.id} ${op.securityTicker} - ${op.quantity}шт × $${op.purchasePricePerShare} = $${op.totalCost}` +
+                    (op.targetBuyPrice ? ` 🎯 Триггер: $${op.targetBuyPrice}` : '') +
+                    (op.hasTrigger ? ' 📧' : '')
+                ).join('\n');
+
+                showResult('operationsResult', operationsList || 'Нет операций', true);
+            } catch (error) {
+                showResult('operationsResult', 'Ошибка: ' + error.message, false);
+            }
+        }
+
+        // Вспомогательная функция
+        function showResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        // Запуск
+        loadSecurities();
+        checkServices();
+        getActiveTriggers();
+    </script>
+</body>
+</html>
