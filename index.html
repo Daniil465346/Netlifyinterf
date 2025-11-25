@@ -300,15 +300,26 @@
         }
 
         // Добавление операции с интеграцией
+        // Обновленная функция добавления операции
         async function addOperation() {
             const securityId = document.getElementById('opSecurityId').value;
             const quantity = document.getElementById('opQuantity').value;
             const price = document.getElementById('opPrice').value;
             const commission = document.getElementById('opCommission').value;
             const targetPrice = document.getElementById('opTargetPrice').value;
-
+        
             if (!securityId) return showResult('opResult', 'Выберите бумагу', false);
-
+        
+            // ПРОВЕРКА: Установлен ли email пользователя
+            const currentEmail = document.getElementById('currentEmail').textContent;
+            if (currentEmail.includes('@example.com') || currentEmail.includes('Загрузка') || currentEmail.includes('Ошибка')) {
+                showResult('opResult', 
+                    '❌ Сначала установите ваш email для уведомлений!\n\n' +
+                    'Перейдите в раздел "Настройка уведомлений" и введите ваш email.', 
+                    false);
+                return;
+            }
+        
             const operation = {
                 securityId: parseInt(securityId),
                 quantity: parseInt(quantity),
@@ -316,30 +327,43 @@
                 commission: parseFloat(commission),
                 targetBuyPrice: parseFloat(targetPrice)
             };
-
+        
             try {
+                showResult('opResult', '📧 Отправляем операцию и уведомление...', true);
+                
                 const response = await fetch(`${INVESTMENT_API}/operation`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(operation)
                 });
-
+        
                 const result = await response.json();
-
+                
                 let message = result.message;
                 if (result.notificationSent) {
-                    message += '\n\n📧 Уведомление отправлено на email!';
+                    message += '\n\n📧 Уведомление отправлено на ваш email!';
                 }
                 if (result.triggerActivated) {
                     message += '\n\n🚨 ТРИГГЕР СРАБОТАЛ! Проверьте почту для деталей.';
                 }
-
+        
                 showResult('opResult', message, true);
-
+                
             } catch (error) {
-                showResult('opResult', 'Ошибка: ' + error.message, false);
+                showResult('opResult', '❌ Ошибка: ' + error.message, false);
             }
         }
+        
+        // Функция для проверки установленного email
+        function isUserEmailSet() {
+            const currentEmail = document.getElementById('currentEmail').textContent;
+            return !currentEmail.includes('@example.com') && 
+                   !currentEmail.includes('Загрузка') && 
+                   !currentEmail.includes('Ошибка') &&
+                   currentEmail.includes('@');
+        }
+        
+        // Обновите секцию email для лучшей видимости
 
         // Активные триггеры
         async function getActiveTriggers() {
@@ -487,3 +511,4 @@
     </script>
 </body>
 </html>
+
