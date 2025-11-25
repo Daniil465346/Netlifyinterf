@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -150,6 +150,18 @@
     </div>
 
     <div class="dashboard">
+        <!-- Добавьте эту секцию в начало dashboard -->
+        <div class="section">
+            <h3>📧 Настройка уведомлений</h3>
+            <div class="api-status">
+                <span>Текущий email:</span>
+                <span id="currentEmail">Загрузка...</span>
+            </div>
+            <input type="email" id="userEmail" placeholder="Введите ваш email для уведомлений">
+            <button onclick="setUserEmail()">Сохранить email</button>
+            <button onclick="sendTestEmail()">Отправить тестовое письмо</button>
+            <div id="emailResult" class="result"></div>
+        </div>
         <!-- Левая колонка -->
         <div>
             <div class="section">
@@ -210,7 +222,7 @@
 
     <script>
         const INVESTMENT_API = 'https://pr4-daniil465346.amvera.io/api/investment';
-        const EMAIL_API = 'https://your-email-service.amvera.io/api/notifications';
+        const EMAIL_API = 'https://apiemailr-daniil465346.amvera.io/api/notifications';
         let securities = [];
 
         // Инициализация
@@ -393,10 +405,85 @@
             element.className = `result ${isSuccess ? 'success' : 'error'}`;
         }
 
+
+        // Загрузка текущего email при старте
+        async function loadCurrentEmail() {
+            try {
+                const response = await fetch(`${EMAIL_API}/current-email`);
+                const data = await response.json();
+                document.getElementById('currentEmail').textContent = data.email;
+
+                if (data.isDefault) {
+                    document.getElementById('currentEmail').innerHTML += ' <small style="color: orange;">(используется по умолчанию)</small>';
+                }
+            } catch (error) {
+                document.getElementById('currentEmail').textContent = 'Ошибка загрузки';
+                console.error('Ошибка загрузки email:', error);
+            }
+        }
+
+        // Установка email пользователя
+        async function setUserEmail() {
+            const email = document.getElementById('userEmail').value;
+
+            if (!email || !email.includes('@')) {
+                showResult('emailResult', 'Пожалуйста, введите корректный email адрес', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${EMAIL_API}/set-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showResult('emailResult', `✅ ${result.message}`, true);
+                    document.getElementById('currentEmail').textContent = email;
+                    document.getElementById('userEmail').value = ''; // Очищаем поле
+                } else {
+                    showResult('emailResult', `❌ Ошибка: ${result.error}`, false);
+                }
+            } catch (error) {
+                showResult('emailResult', '❌ Ошибка соединения с сервисом', false);
+            }
+        }
+
+        // Отправка тестового письма
+        async function sendTestEmail() {
+            try {
+                const response = await fetch(`${EMAIL_API}/send-test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showResult('emailResult', `✅ Тестовое письмо отправлено: ${result.message}`, true);
+                } else {
+                    showResult('emailResult', `❌ Ошибка отправки: ${result.message}`, false);
+                }
+            } catch (error) {
+                showResult('emailResult', '❌ Ошибка соединения с сервисом', false);
+            }
+        }
+
+        // Обновите функцию showResult для поддержки email секции
+        function showResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message; // Используем innerHTML для эмодзи
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+        }
+
         // Запуск
         loadSecurities();
         checkServices();
         getActiveTriggers();
+        loadCurrentEmail();
     </script>
 </body>
 </html>
