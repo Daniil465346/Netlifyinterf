@@ -219,6 +219,13 @@
         <button onclick="getOperations()">Обновить историю</button>
         <div id="operationsResult" class="result"></div>
     </div>
+    <!-- Добавьте эту секцию в конец -->
+    <div class="section">
+        <h3>🔧 Диагностика</h3>
+        <button onclick="runDiagnostics()">Запустить диагностику</button>
+        <button onclick="testSmtpConnection()">Тест SMTP подключения</button>
+        <div id="diagnosticResult" class="result"></div>
+    </div>
 
     <script>
         const INVESTMENT_API = 'https://pr4-daniil465346.amvera.io/api/investment';
@@ -511,4 +518,5 @@
     </script>
 </body>
 </html>
+
 
