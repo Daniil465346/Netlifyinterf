@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Инвестиционная платформа</title>
     <style>
+        /* Стили остаются без изменений */
         body {
             font-family: Arial, sans-serif;
             max-width: 1200px;
@@ -150,7 +151,7 @@
         </div>
         <div class="flow-step">
             <div class="flow-number">3</div>
-            <div>При срабатывании триггера → письмо на kuzminovdaniil4@gmail.com</div>
+            <div>При срабатывании триггера → письмо на указанный email</div>
         </div>
     </div>
 
@@ -165,11 +166,10 @@
                     <span id="currentEmail">Загрузка...</span>
                 </div>
                 <div class="api-status">
-                    <span>Обновлен:</span>
-                    <span id="emailUpdatedAt">-</span>
+                    <span>Статус Email API:</span>
+                    <span id="emailApiStatus">Проверка...</span>
                 </div>
-                <input type="email" id="userEmail" placeholder="Введите новый email для уведомлений">
-                <button onclick="setUserEmail()">💾 Сохранить email</button>
+                <input type="email" id="userEmail" placeholder="Введите email для уведомлений">
                 <button onclick="sendTestEmail()">🧪 Отправить тестовое письмо</button>
                 <div id="emailResult" class="result"></div>
             </div>
@@ -178,11 +178,11 @@
                 <h3>📊 Статус сервисов</h3>
                 <div class="api-status">
                     <span>Investment API:</span>
-                    <span><span class="status-indicator status-active"></span> Online</span>
+                    <span><span class="status-indicator" id="investmentStatus"></span> <span id="investmentStatusText">Проверка...</span></span>
                 </div>
                 <div class="api-status">
                     <span>Email Service:</span>
-                    <span><span class="status-indicator status-active"></span> Online</span>
+                    <span><span class="status-indicator" id="emailStatus"></span> <span id="emailStatusText">Проверка...</span></span>
                 </div>
                 <button onclick="checkServices()">Проверить статус</button>
             </div>
@@ -211,6 +211,7 @@
                 <input type="number" id="opPrice" placeholder="Цена покупки" step="0.01">
                 <input type="number" id="opCommission" placeholder="Комиссия" value="5.00" step="0.01">
                 <input type="number" id="opTargetPrice" placeholder="Целевая цена для триггера" step="0.01">
+                <input type="email" id="opEmail" placeholder="Email для уведомления (обязательно)">
                 <button onclick="addOperation()">📧 Добавить операцию</button>
                 <div id="opResult" class="result"></div>
             </div>
@@ -232,7 +233,7 @@
 
     <script>
         const INVESTMENT_API = 'https://pr4-daniil465346.amvera.io/api/investment';
-        const EMAIL_API = 'https://apiemailr-daniil465346.amvera.io/api/notifications';
+        const EMAIL_API = 'http://apisendemail-oribon.amvera.io'; // Ваш API
         let securities = [];
 
         // Инициализация
@@ -254,21 +255,32 @@
         // Проверка статуса сервисов
         async function checkServices() {
             try {
+                // Проверка Investment API
                 const investmentResponse = await fetch(`${INVESTMENT_API}/securities`);
+                const investmentOk = investmentResponse.ok;
+                
+                // Проверка Email API
                 const emailResponse = await fetch(`${EMAIL_API}/status`);
+                const emailOk = emailResponse.ok;
                 
-                const investmentStatus = investmentResponse.ok ? 'status-active' : 'status-inactive';
-                const emailStatus = emailResponse.ok ? 'status-active' : 'status-inactive';
+                // Обновление статуса Investment API
+                document.getElementById('investmentStatus').className = `status-indicator ${investmentOk ? 'status-active' : 'status-inactive'}`;
+                document.getElementById('investmentStatusText').textContent = investmentOk ? 'Online' : 'Offline';
                 
-                document.querySelectorAll('.status-indicator')[0].className = `status-indicator ${investmentStatus}`;
-                document.querySelectorAll('.status-indicator')[1].className = `status-indicator ${emailStatus}`;
+                // Обновление статуса Email API
+                document.getElementById('emailStatus').className = `status-indicator ${emailOk ? 'status-active' : 'status-inactive'}`;
+                document.getElementById('emailStatusText').textContent = emailOk ? 'Online' : 'Offline';
 
-                if (investmentResponse.ok && emailResponse.ok) {
+                if (investmentOk && emailOk) {
                     showResult('emailResult', '✅ Все сервисы работают корректно!', true);
                 } else {
                     showResult('emailResult', '⚠️ Некоторые сервисы недоступны', false);
                 }
             } catch (error) {
+                document.getElementById('investmentStatus').className = 'status-indicator status-inactive';
+                document.getElementById('investmentStatusText').textContent = 'Offline';
+                document.getElementById('emailStatus').className = 'status-indicator status-inactive';
+                document.getElementById('emailStatusText').textContent = 'Offline';
                 showResult('emailResult', '❌ Ошибка проверки статуса', false);
             }
         }
@@ -320,15 +332,17 @@
             }
         }
 
-        // Добавление операции
+        // Добавление операции с отправкой email
         async function addOperation() {
             const securityId = document.getElementById('opSecurityId').value;
             const quantity = document.getElementById('opQuantity').value;
             const price = document.getElementById('opPrice').value;
             const commission = document.getElementById('opCommission').value;
             const targetPrice = document.getElementById('opTargetPrice').value;
+            const email = document.getElementById('opEmail').value.trim();
 
             if (!securityId) return showResult('opResult', '❌ Выберите бумагу', false);
+            if (!email || !email.includes('@')) return showResult('opResult', '❌ Введите корректный email', false);
 
             const operation = {
                 securityId: parseInt(securityId),
@@ -341,6 +355,7 @@
             try {
                 showResult('opResult', '🔄 Создаем операцию...', true);
                 
+                // Создаем операцию в инвестиционном API
                 const response = await fetch(`${INVESTMENT_API}/operation`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -350,14 +365,40 @@
                 const result = await response.json();
                 
                 let message = result.message;
-                if (result.notificationSent) {
-                    message += '\n\n📧 Уведомление отправлено на kuzminovdaniil4@gmail.com';
+
+                // Отправляем email через ваш API
+                if (result.triggerActivated || true) { // Всегда отправляем email для демонстрации
+                    try {
+                        const emailResponse = await fetch(`${EMAIL_API}/send-email`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                to: email,
+                                subject: `Инвестиционная операция - ${securities.find(s => s.id == securityId).ticker}`,
+                                message: `Создана новая операция:\n\nАкция: ${securities.find(s => s.id == securityId).ticker}\nКоличество: ${quantity}\nЦена покупки: $${price}\nЦелевая цена: $${targetPrice}\nКомиссия: $${commission}\n\nОбщая стоимость: $${(quantity * price + parseFloat(commission)).toFixed(2)}`
+                            })
+                        });
+
+                        const emailResult = await emailResponse.json();
+                        
+                        if (emailResponse.ok) {
+                            message += `\n\n📧 Уведомление отправлено на ${email}`;
+                        } else {
+                            message += `\n\n⚠️ Ошибка отправки email: ${emailResult.message || 'Неизвестная ошибка'}`;
+                        }
+                    } catch (emailError) {
+                        message += `\n\n⚠️ Ошибка соединения с email сервисом`;
+                    }
                 }
+
                 if (result.triggerActivated) {
                     message += '\n\n🚨 ТРИГГЕР СРАБОТАЛ! Проверьте почту.';
                 }
 
                 showResult('opResult', message, true);
+                
+                // Очищаем поле email после успешной операции
+                document.getElementById('opEmail').value = '';
                 
             } catch (error) {
                 showResult('opResult', '❌ Ошибка: ' + error.message, false);
@@ -402,10 +443,6 @@
                 message += `🚨 Сработало: ${result.activatedTriggers.length}\n`;
                 message += `⏰ Время: ${new Date(result.checkedAt).toLocaleString()}`;
 
-                if (result.activatedTriggers.length > 0) {
-                    message += '\n\n📧 Уведомления отправлены на kuzminovdaniil4@gmail.com';
-                }
-
                 showResult('triggersResult', message, true);
 
             } catch (error) {
@@ -434,25 +471,41 @@
             }
         }
 
-        // Отправка тестового письма
+        // Отправка тестового письма через ваш API
         async function sendTestEmail() {
+            const email = document.getElementById('userEmail').value.trim();
+            
+            if (!email || !email.includes('@')) {
+                showResult('emailResult', '❌ Пожалуйста, введите корректный email адрес', false);
+                return;
+            }
+
             try {
                 showResult('emailResult', '🔄 Отправляем тестовое письмо...', true);
                 
-                const response = await fetch(`${EMAIL_API}/send-test`, {
+                const response = await fetch(`${EMAIL_API}/send-email`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: email,
+                        subject: 'Тестовое письмо от Инвестиционной платформы',
+                        message: 'Это тестовое письмо подтверждает, что система уведомлений работает корректно! 🎉\n\nВы успешно настроили получение уведомлений о инвестиционных операциях.'
+                    })
                 });
 
                 const result = await response.json();
-
-                if (result.success) {
-                    showResult('emailResult', `✅ Тестовое письмо отправлено на kuzminovdaniil4@gmail.com\n\n${result.message}`, true);
+                
+                if (response.ok) {
+                    showResult('emailResult', 
+                        `✅ Тестовое письмо отправлено на ${email}!\n\nСообщение: ${result.message || 'Письмо успешно отправлено'}`, 
+                        true);
+                    document.getElementById('currentEmail').textContent = email;
+                    document.getElementById('userEmail').value = '';
                 } else {
-                    showResult('emailResult', `❌ Ошибка отправки: ${result.message}`, false);
+                    showResult('emailResult', `❌ Ошибка отправки: ${result.message || 'Неизвестная ошибка'}`, false);
                 }
             } catch (error) {
-                showResult('emailResult', '❌ Ошибка соединения с сервисом', false);
+                showResult('emailResult', '❌ Ошибка соединения с email сервисом', false);
             }
         }
 
@@ -462,87 +515,21 @@
             element.textContent = message;
             element.className = `result ${isSuccess ? 'success' : 'error'}`;
         }
-        // Загрузка текущего email
+
+        // Загрузка текущего email статуса
         async function loadCurrentEmail() {
             try {
-                const response = await fetch(`${EMAIL_API}/current-email`);
-                const data = await response.json();
-                
-                document.getElementById('currentEmail').textContent = data.email;
-                document.getElementById('emailUpdatedAt').textContent = 
-                    new Date(data.updatedAt).toLocaleString();
-                    
-                if (data.isDefault) {
-                    document.getElementById('currentEmail').innerHTML += 
-                        ' <small style="color: orange;">(по умолчанию)</small>';
-                }
-            } catch (error) {
-                document.getElementById('currentEmail').textContent = 'Ошибка загрузки';
-                console.error('Ошибка загрузки email:', error);
-            }
-        }
-        
-        // Установка нового email
-        async function setUserEmail() {
-            const email = document.getElementById('userEmail').value.trim();
-            
-            if (!email || !email.includes('@')) {
-                showResult('emailResult', '❌ Пожалуйста, введите корректный email адрес', false);
-                return;
-            }
-        
-            try {
-                showResult('emailResult', '🔄 Сохраняем email...', true);
-                
-                const response = await fetch(`${EMAIL_API}/set-email`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email })
-                });
-        
-                const result = await response.json();
-                
-                if (result.success) {
-                    showResult('emailResult', `✅ ${result.message}`, true);
-                    document.getElementById('currentEmail').textContent = email;
-                    document.getElementById('emailUpdatedAt').textContent = 
-                        new Date(result.updatedAt).toLocaleString();
-                    document.getElementById('userEmail').value = '';
-                    
-                    // Обновляем историю операций чтобы показать новый email
-                    setTimeout(() => {
-                        showResult('emailResult', 
-                            '📧 Теперь все уведомления будут приходить на этот email!', true);
-                    }, 2000);
+                const response = await fetch(`${EMAIL_API}/status`);
+                if (response.ok) {
+                    document.getElementById('emailApiStatus').textContent = 'Готов к работе';
+                    document.getElementById('emailApiStatus').style.color = 'green';
                 } else {
-                    showResult('emailResult', `❌ Ошибка: ${result.error}`, false);
+                    document.getElementById('emailApiStatus').textContent = 'Не доступен';
+                    document.getElementById('emailApiStatus').style.color = 'red';
                 }
             } catch (error) {
-                showResult('emailResult', '❌ Ошибка соединения с сервисом', false);
-            }
-        }
-        
-        // Отправка тестового письма
-        async function sendTestEmail() {
-            try {
-                showResult('emailResult', '🔄 Отправляем тестовое письмо...', true);
-                
-                const response = await fetch(`${EMAIL_API}/send-test`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-        
-                const result = await response.json();
-                
-                if (result.success) {
-                    showResult('emailResult', 
-                        `✅ Тестовое письмо отправлено на текущий email!\n\n${result.message}`, 
-                        true);
-                } else {
-                    showResult('emailResult', `❌ Ошибка отправки: ${result.message}`, false);
-                }
-            } catch (error) {
-                showResult('emailResult', '❌ Ошибка соединения с сервисом', false);
+                document.getElementById('emailApiStatus').textContent = 'Ошибка подключения';
+                document.getElementById('emailApiStatus').style.color = 'red';
             }
         }
 
@@ -555,4 +542,3 @@
     </script>
 </body>
 </html>
-
