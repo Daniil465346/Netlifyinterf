@@ -1,0 +1,11 @@
+[[redirects]]
+  from = "/api/investment/*"
+  to = "http://pr4-daniil465346.amvera.io/api/investment/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/email/*"
+  to = "http://neapiemail2-daniil465346.amvera.io/:splat"
+  status = 200
+  force = true
