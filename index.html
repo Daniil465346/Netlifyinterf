@@ -1,11 +1,10 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Инвестиционная платформа</title>
     <style>
-        /* Стили остаются без изменений */
         body {
             font-family: Arial, sans-serif;
             max-width: 1200px;
@@ -75,30 +74,37 @@
             font-size: 16px;
         }
 
-        button:hover {
-            background: #0056b3;
-        }
+            button:hover {
+                background: #0056b3;
+            }
 
         .result {
             padding: 15px;
             margin: 10px 0;
             border-radius: 5px;
             background: #f8f9fa;
+            white-space: pre-line;
         }
 
         .success {
             background: #d4edda;
             border: 1px solid #c3e6cb;
+            color: #155724;
         }
 
         .error {
             background: #f8d7da;
             border: 1px solid #f5c6cb;
+            color: #721c24;
         }
 
         .notification {
             background: #fff3cd;
             border: 1px solid #ffeaa7;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            color: #856404;
         }
 
         .status-indicator {
@@ -126,24 +132,73 @@
             border-radius: 5px;
         }
 
-        .email-info {
-            background: #e7f3ff;
-            border: 2px solid #007bff;
+        .price-ticker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
             padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 10px 0;
+            background: #fff;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .ticker-item {
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+            font-weight: bold;
+        }
+
+        .price-up {
+            color: #28a745;
+        }
+
+        .price-down {
+            color: #dc3545;
+        }
+
+        .tracking-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>🚀 Инвестиционная платформа</h1>
+    <h1>Инвестиционная платформа</h1>
+    <div id="priceTicker" class="price-ticker"></div>
 
     <div class="integration-flow">
-        <h3>🔗 Схема работы</h3>
+        <h3>Схема работы</h3>
         <div class="flow-step">
             <div class="flow-number">1</div>
-            <div>Создайте операцию покупки акций</div>
+            <div>Создайте операцию покупки акций с указанием email</div>
         </div>
         <div class="flow-step">
             <div class="flow-number">2</div>
@@ -151,45 +206,29 @@
         </div>
         <div class="flow-step">
             <div class="flow-number">3</div>
-            <div>При срабатывании триггера → письмо на указанный email</div>
+            <div>При срабатывании триггера письмо будет отправлено на указанный email</div>
         </div>
     </div>
 
     <div class="dashboard">
         <!-- Левая колонка -->
         <div>
-            <!-- Обновленная секция уведомлений -->
             <div class="section">
-                <h3>📧 Управление уведомлениями</h3>
-                <div class="api-status">
-                    <span>Текущий email:</span>
-                    <span id="currentEmail">Загрузка...</span>
-                </div>
-                <div class="api-status">
-                    <span>Статус Email API:</span>
-                    <span id="emailApiStatus">Проверка...</span>
-                </div>
-                <input type="email" id="userEmail" placeholder="Введите email для уведомлений">
-                <button onclick="sendTestEmail()">🧪 Отправить тестовое письмо</button>
-                <div id="emailResult" class="result"></div>
-            </div>
-
-            <div class="section">
-                <h3>📊 Статус сервисов</h3>
+                <h3>Статус сервисов</h3>
                 <div class="api-status">
                     <span>Investment API:</span>
-                    <span><span class="status-indicator" id="investmentStatus"></span> <span id="investmentStatusText">Проверка...</span></span>
+                    <span><span class="status-indicator" id="investmentStatusIndicator"></span> <span id="investmentStatusText">Проверка...</span></span>
                 </div>
                 <div class="api-status">
                     <span>Email Service:</span>
-                    <span><span class="status-indicator" id="emailStatus"></span> <span id="emailStatusText">Проверка...</span></span>
+                    <span><span class="status-indicator" id="emailServiceStatusIndicator"></span> <span id="emailServiceStatusText">Проверка...</span></span>
                 </div>
                 <button onclick="checkServices()">Проверить статус</button>
             </div>
 
             <div class="section">
-                <h3>🧮 Калькулятор операции</h3>
-                <select id="calcSecurityId" onchange="updatePrices()">
+                <h3>Калькулятор операции</h3>
+                <select id="calcSecurityId">
                     <option value="">Выберите бумагу</option>
                 </select>
                 <input type="number" id="calcQuantity" placeholder="Количество" value="10">
@@ -203,7 +242,10 @@
         <!-- Правая колонка -->
         <div>
             <div class="section">
-                <h3>💾 Новая операция</h3>
+                <h3>Новая операция с уведомлением</h3>
+                <div class="notification" style="margin-bottom: 15px;">
+                    <strong>Важно:</strong> Email будет сохранен вместе с операцией и использован для уведомлений о триггерах
+                </div>
                 <select id="opSecurityId">
                     <option value="">Выберите бумагу</option>
                 </select>
@@ -211,99 +253,693 @@
                 <input type="number" id="opPrice" placeholder="Цена покупки" step="0.01">
                 <input type="number" id="opCommission" placeholder="Комиссия" value="5.00" step="0.01">
                 <input type="number" id="opTargetPrice" placeholder="Целевая цена для триггера" step="0.01">
-                <input type="email" id="opEmail" placeholder="Email для уведомления (обязательно)">
-                <button onclick="addOperation()">📧 Добавить операцию</button>
+                <input type="email" id="opEmail" placeholder="Email для уведомления" value="kuzminovdaniil4@gmail.com">
+                <button onclick="addOperationWithEmail()" style="background: #28a745;">Добавить операцию с уведомлением</button>
                 <div id="opResult" class="result"></div>
             </div>
 
             <div class="section">
-                <h3>🔍 Активные триггеры</h3>
-                <button onclick="getActiveTriggers()">Показать активные ордера</button>
-                <button onclick="checkAllTriggers()">Проверить все триггеры</button>
+                <h3>Активные триггеры</h3>
+                <div id="triggersInfo" class="notification" style="margin-bottom: 10px;">
+                    Автопроверка: каждые 30 секунд<br>
+                    При срабатывании: письмо на email из операции
+                </div>
+
+                <div id="trackingInfo" class="notification tracking-info" style="margin-bottom: 10px;">
+                    <strong>Отслеживание уведомлений:</strong><br>
+                    • Письма сохраняются в браузере на 24 часа<br>
+                    • Все расчеты стоимости выполняются через Investment API<br>
+                    • Всего отслеживается: <strong id="trackingCount">0</strong> уведомлений
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button onclick="getActiveTriggers()" style="flex: 1;">Обновить список</button>
+                    <button onclick="checkTriggersAndSendEmails()" style="background: #28a745; flex: 1;">Проверить триггеры сейчас</button>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+
+                    <button onclick="clearNotificationsHistory()" style="background: #9c27b0; flex: 1;">Очистить историю</button>
+                </div>
+
                 <div id="triggersResult" class="result"></div>
             </div>
         </div>
     </div>
 
     <div class="section">
-        <h3>📈 История операций</h3>
+        <h3>История операций</h3>
         <button onclick="getOperations()">Обновить историю</button>
         <div id="operationsResult" class="result"></div>
     </div>
 
     <script>
-        const INVESTMENT_API = 'https://pr4-daniil465346.amvera.io/api/investment';
-        const EMAIL_API = 'http://apisendemail-oribon.amvera.io/sendEmail'; // Ваш API
+        const INVESTMENT_API = 'http://pr4-daniil465346.amvera.io/api/investment';
+        const EMAIL_API = 'http://neapiemail2-daniil465346.amvera.io';
         let securities = [];
+        let previousPrices = {};
+        let autoRefreshEnabled = false;
+        let priceUpdateInterval;
+        let triggerCheckInterval;
 
-        // Инициализация
+        let sentNotifications = new Set();
+
+        // ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ЛОКАЛЬНЫМ ХРАНИЛИЩЕМ ==========
+
+        function loadSentNotifications() {
+            try {
+                const saved = localStorage.getItem('sentNotifications');
+                if (saved) {
+                    const array = JSON.parse(saved);
+                    sentNotifications = new Set(array);
+                    console.log(`Загружено ${sentNotifications.size} отправленных уведомлений из localStorage`);
+                    updateTrackingCount();
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки sentNotifications:', error);
+                sentNotifications = new Set();
+            }
+        }
+
+        function saveSentNotifications() {
+            try {
+                const array = Array.from(sentNotifications);
+                localStorage.setItem('sentNotifications', JSON.stringify(array));
+                console.log(`Сохранено ${sentNotifications.size} уведомлений в localStorage`);
+                updateTrackingCount();
+            } catch (error) {
+                console.error('Ошибка сохранения sentNotifications:', error);
+            }
+        }
+
+        function cleanupOldNotifications() {
+            const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+            const oldCount = sentNotifications.size;
+
+            const filtered = Array.from(sentNotifications).filter(id => {
+                const parts = id.split('_');
+                if (parts.length < 4) return false;
+                const timestamp = parseInt(parts[3]);
+                return timestamp > twentyFourHoursAgo;
+            });
+
+            sentNotifications = new Set(filtered);
+            saveSentNotifications();
+
+            const removed = oldCount - sentNotifications.size;
+            if (removed > 0) {
+                console.log(`Очищено ${removed} старых уведомлений (старше 24 часов)`);
+            }
+        }
+
+        function updateTrackingCount() {
+            const countElement = document.getElementById('trackingCount');
+            if (countElement) {
+                countElement.textContent = sentNotifications.size;
+            }
+        }
+
+        function createTriggerId(operationId, securityTicker, triggeredAt) {
+            const time = new Date(triggeredAt).getTime();
+            return `trigger_${operationId}_${securityTicker}_${time}`;
+        }
+
+        // ========== ФУНКЦИЯ ДЛЯ РАСЧЕТА СТОИМОСТИ ЧЕРЕЗ API ==========
+
+        async function calculateOperationCost(operationData, currentPrice) {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/calculate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        securityId: operationData.securityId,
+                        quantity: operationData.quantity,
+                        purchasePricePerShare: currentPrice,
+                        commission: operationData.commission || 5.00,
+                        targetBuyPrice: operationData.targetBuyPrice || null
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.totalCost) {
+                    const total = result.TotalCost || result.total || result.cost;
+                    if (total) {
+                        return {
+                            totalCost: total,
+                            hasTrigger: result.hasTrigger || false,
+                            triggerMessage: result.triggerMessage || '',
+                            calculatedWithApi: true,
+                            details: result.details || ''
+                        };
+                    }
+                    throw new Error('API не вернул totalCost');
+                }
+
+                return {
+                    totalCost: result.totalCost,
+                    hasTrigger: result.hasTrigger || false,
+                    triggerMessage: result.triggerMessage || '',
+                    calculatedWithApi: true,
+                    details: result.details || ''
+                };
+
+            } catch (error) {
+                console.error('Ошибка расчета через API:', error);
+
+                if (operationData.totalCost) {
+                    return {
+                        totalCost: operationData.totalCost,
+                        hasTrigger: !!operationData.targetBuyPrice,
+                        triggerMessage: operationData.targetBuyPrice ?
+                            `Триггер: $${operationData.targetBuyPrice}` : '',
+                        calculatedWithApi: false,
+                        details: 'Использованы данные из операции (API недоступен)'
+                    };
+                }
+
+                throw error;
+            }
+        }
+
+        // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
+
+        function showResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = message;
+                element.className = `result ${isSuccess ? 'success' : 'error'}`;
+            }
+        }
+
+        function showToastNotification(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.innerHTML = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+                color: white;
+                border-radius: 5px;
+                z-index: 1000;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                animation: slideIn 0.3s ease;
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ========== EMAIL ФУНКЦИИ ==========
+
+        async function sendEmailAPI(toEmail, subject, message) {
+            try {
+                const response = await fetch(`${EMAIL_API}/sendEmail`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        toEmail: toEmail,
+                        subject: subject,
+                        text: message
+                    })
+                });
+
+                if (response.status === 201 || response.status === 200) {
+                    return { success: true, message: 'Письмо отправлено' };
+                } else {
+                    const errorText = await response.text();
+                    return { success: false, message: `Ошибка ${response.status}: ${errorText}` };
+                }
+            } catch (error) {
+                console.error('Email API error:', error);
+                return { success: false, message: `Сетевая ошибка: ${error.message}` };
+            }
+        }
+
+        // ========== ЗАГРУЗКА ДАННЫХ ==========
+
         async function loadSecurities() {
             try {
                 const response = await fetch(`${INVESTMENT_API}/securities`);
                 securities = await response.json();
 
+                const calcSelect = document.getElementById('calcSecurityId');
+                const opSelect = document.getElementById('opSecurityId');
+
+                calcSelect.innerHTML = '<option value="">Выберите бумагу</option>';
+                opSelect.innerHTML = '<option value="">Выберите бумагу</option>';
+
                 securities.forEach(security => {
-                    const option = `<option value="${security.id}">${security.ticker} - $${security.currentPrice}</option>`;
-                    document.getElementById('calcSecurityId').innerHTML += option;
-                    document.getElementById('opSecurityId').innerHTML += option;
+                    const optionText = `${security.ticker} - $${security.currentPrice}`;
+
+                    const calcOption = document.createElement('option');
+                    calcOption.value = security.id;
+                    calcOption.textContent = optionText;
+                    calcSelect.appendChild(calcOption);
+
+                    const opOption = document.createElement('option');
+                    opOption.value = security.id;
+                    opOption.textContent = optionText;
+                    opSelect.appendChild(opOption);
                 });
+
+                console.log(`Загружено бумаг: ${securities.length}`);
+
+                calcSelect.addEventListener('change', updatePriceOnSelect);
+                opSelect.addEventListener('change', updatePriceOnSelect);
+
             } catch (error) {
                 console.error('Ошибка загрузки бумаг:', error);
             }
         }
 
-        // Проверка статуса сервисов
-        async function checkServices() {
-            try {
-                // Проверка Investment API
-                const investmentResponse = await fetch(`${INVESTMENT_API}/securities`);
-                const investmentOk = investmentResponse.ok;
-                
-                // Проверка Email API
-                const emailResponse = await fetch(`${EMAIL_API}/status`);
-                const emailOk = emailResponse.ok;
-                
-                // Обновление статуса Investment API
-                document.getElementById('investmentStatus').className = `status-indicator ${investmentOk ? 'status-active' : 'status-inactive'}`;
-                document.getElementById('investmentStatusText').textContent = investmentOk ? 'Online' : 'Offline';
-                
-                // Обновление статуса Email API
-                document.getElementById('emailStatus').className = `status-indicator ${emailOk ? 'status-active' : 'status-inactive'}`;
-                document.getElementById('emailStatusText').textContent = emailOk ? 'Online' : 'Offline';
+        function updatePriceOnSelect() {
+            const selectElement = this;
+            const securityId = selectElement.value;
 
-                if (investmentOk && emailOk) {
-                    showResult('emailResult', '✅ Все сервисы работают корректно!', true);
+            if (!securityId) return;
+
+            const security = securities.find(s => s.id == securityId);
+            if (security) {
+                if (selectElement.id === 'calcSecurityId') {
+                    document.getElementById('calcCurrentPrice').value = security.currentPrice;
+                } else if (selectElement.id === 'opSecurityId') {
+                    document.getElementById('opPrice').value = security.currentPrice;
+                }
+            }
+        }
+
+        // ========== ОБНОВЛЕНИЕ ЦЕН В РЕАЛЬНОМ ВРЕМЕНИ ==========
+        async function updatePricesInRealTime() {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/current-prices`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} при запросе current-prices`);
+                }
+                const data = await response.json();
+
+                const priceItems = data.Prices || data.prices || [];
+
+                const updatedSecurities = priceItems.map(p => ({
+                    id: p.Id || p.id,
+                    ticker: p.Ticker || p.ticker,
+                    currentPrice: Number((p.CurrentPrice || p.currentPrice || 0).toFixed(2))
+                }));
+
+                // Обновляем глобальный массив securities
+                updatedSecurities.forEach(upd => {
+                    const existing = securities.find(s => s.id == upd.id);
+                    if (existing) {
+                        existing.currentPrice = upd.currentPrice;
+                    } else {
+                        securities.push({
+                            id: upd.id,
+                            ticker: upd.ticker,
+                            name: upd.name || '',
+                            currentPrice: upd.currentPrice
+                        });
+                    }
+                });
+
+                // Обновляем визуальный ticker
+                const tickerEl = document.getElementById('priceTicker');
+                if (tickerEl) {
+                    tickerEl.innerHTML = securities.map(sec =>
+                        `<div class="ticker-item">${sec.ticker}: $${Number(sec.currentPrice).toFixed(2)}</div>`
+                    ).join('');
+                }
+
+                // Обновляем выпадающие списки и поля цен
+                updateDropdownPrices();
+                updateSelectedPriceFields();
+
+            } catch (error) {
+                console.error('Ошибка обновления цен:', error);
+                const tickerEl = document.getElementById('priceTicker');
+                if (tickerEl) {
+                    tickerEl.innerHTML = `<div class="notification">Ошибка обновления цен: ${error.message}</div>`;
+                }
+            }
+        }
+
+        function updateDropdownPrices() {
+            const calcSelect = document.getElementById('calcSecurityId');
+            const opSelect = document.getElementById('opSecurityId');
+
+            if (!calcSelect || !opSelect) return;
+
+            const calcSelectedValue = calcSelect.value;
+            const opSelectedValue = opSelect.value;
+
+            Array.from(calcSelect.options).forEach(option => {
+                if (option.value) {
+                    const security = securities.find(s => s.id == option.value);
+                    if (security) {
+                        option.textContent = `${security.ticker} - $${security.currentPrice}`;
+                    }
+                }
+            });
+
+            Array.from(opSelect.options).forEach(option => {
+                if (option.value) {
+                    const security = securities.find(s => s.id == option.value);
+                    if (security) {
+                        option.textContent = `${security.ticker} - $${security.currentPrice}`;
+                    }
+                }
+            });
+
+            calcSelect.value = calcSelectedValue;
+            opSelect.value = opSelectedValue;
+        }
+
+        function updateSelectedPriceFields() {
+            const calcSelect = document.getElementById('calcSecurityId');
+            const opSelect = document.getElementById('opSecurityId');
+
+            if (calcSelect && calcSelect.value) {
+                const security = securities.find(s => s.id == calcSelect.value);
+                const priceField = document.getElementById('calcCurrentPrice');
+                if (security && priceField) {
+                    priceField.value = security.currentPrice;
+                }
+            }
+
+            if (opSelect && opSelect.value) {
+                const security = securities.find(s => s.id == opSelect.value);
+                const priceField = document.getElementById('opPrice');
+                if (security && priceField) {
+                    priceField.value = security.currentPrice;
+                }
+            }
+        }
+
+        // ========== ОПЕРАЦИИ И ТРИГГЕРЫ ==========
+
+        async function addOperationWithEmail() {
+            const securityId = document.getElementById('opSecurityId').value;
+            const quantity = document.getElementById('opQuantity').value;
+            const price = document.getElementById('opPrice').value;
+            const commission = document.getElementById('opCommission').value;
+            const targetPrice = document.getElementById('opTargetPrice').value;
+            const email = document.getElementById('opEmail').value.trim();
+
+            if (!securityId) return showResult('opResult', '❌ Выберите бумагу', false);
+            if (!email || !email.includes('@')) return showResult('opResult', '❌ Введите корректный email', false);
+            if (!quantity || quantity <= 0) return showResult('opResult', '❌ Введите корректное количество', false);
+            if (!price || price <= 0) return showResult('opResult', '❌ Введите корректную цену', false);
+
+            const operation = {
+                securityId: parseInt(securityId),
+                quantity: parseInt(quantity),
+                purchasePricePerShare: parseFloat(price),
+                commission: parseFloat(commission),
+                targetBuyPrice: targetPrice ? parseFloat(targetPrice) : null,
+                notificationEmail: email
+            };
+
+            try {
+                showResult('opResult', 'Создаем операцию...', true);
+
+                const response = await fetch(`${INVESTMENT_API}/operation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(operation)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+
+                let message = 'Операция успешно создана!\n\n';
+                const security = securities.find(s => s.id == securityId);
+                if (security) {
+                    message += `Бумага: ${security.ticker}\n`;
+                }
+                message += `Количество: ${quantity} акций\n`;
+                message += `Цена покупки: $${parseFloat(price).toFixed(2)}\n`;
+                message += `Комиссия: $${parseFloat(commission).toFixed(2)}\n`;
+
+                if (targetPrice) {
+                    message += `Триггер: $${parseFloat(targetPrice).toFixed(2)}\n`;
+                    message += `Email для уведомлений: ${email}\n\n`;
+                    message += `При срабатывании триггера письмо придет на этот email!\n`;
+                }
+
+                showResult('opResult', message, true);
+
+                localStorage.setItem('lastUsedEmail', email);
+                getOperations();
+                getActiveTriggers();
+
+            } catch (error) {
+                console.error('Ошибка создания операции:', error);
+                showResult('opResult', `❌ Ошибка: ${error.message}`, false);
+            }
+        }
+
+        async function markTriggerAsProcessed(triggerId) {
+            try {
+                await fetch(`${INVESTMENT_API}/mark-processed/${triggerId}`, {
+                    method: 'POST'
+                });
+            } catch (error) {
+                console.error('Ошибка отметки триггера:', error);
+            }
+        }
+
+        async function checkTriggersAndSendEmails() {
+            try {
+                showResult('triggersResult', 'Проверяем триггеры и отправляем уведомления...', true);
+
+                const operationsResponse = await fetch(`${INVESTMENT_API}/operations`);
+                if (!operationsResponse.ok) throw new Error('Не удалось получить операции');
+                const operations = await operationsResponse.json();
+
+                const historyResponse = await fetch(`${INVESTMENT_API}/trigger-history`);
+                const triggerHistory = await historyResponse.json();
+
+                let sentCount = 0;
+                const newTriggers = [];
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+                for (const historyItem of triggerHistory) {
+                    const triggerTime = new Date(historyItem.triggeredAt);
+
+                    if (triggerTime > twentyFourHoursAgo) {
+                        const triggerId = createTriggerId(
+                            historyItem.operationId,
+                            historyItem.securityTicker,
+                            historyItem.triggeredAt
+                        );
+
+                        if (!sentNotifications.has(triggerId)) {
+                            newTriggers.push({
+                                ...historyItem,
+                                triggerId: triggerId,
+                                triggerTime: triggerTime
+                            });
+                        }
+                    }
+                }
+
+                if (newTriggers.length > 0) {
+                    for (const trigger of newTriggers) {
+                        try {
+                            const operation = operations.find(op => op.id === trigger.operationId);
+                            const emailToSend = operation?.notificationEmail ||
+                                                document.getElementById('opEmail').value.trim() ||
+                                                'kuzminovdaniil4@gmail.com';
+
+                            if (!operation) {
+                                console.log(`Не найдена операция для триггера ${trigger.operationId}`);
+                                continue;
+                            }
+
+                            let calculation;
+                            try {
+                                calculation = await calculateOperationCost(
+                                    {
+                                        securityId: operation.securityId,
+                                        quantity: operation.quantity,
+                                        commission: operation.commission || 5.00,
+                                        targetBuyPrice: operation.targetBuyPrice,
+                                        totalCost: operation.totalCost
+                                    },
+                                    trigger.triggeredPrice
+                                );
+                            } catch (calcError) {
+                                calculation = {
+                                    totalCost: operation.totalCost || (operation.quantity * trigger.triggeredPrice + (operation.commission || 5.00)),
+                                    hasTrigger: !!operation.targetBuyPrice,
+                                    triggerMessage: operation.targetBuyPrice ? `Триггер: $${operation.targetBuyPrice}` : '',
+                                    calculatedWithApi: false,
+                                    details: 'Расчет на основе данных операции (API недоступен)'
+                                };
+                            }
+
+                            const emailText = `СРОЧНОЕ УВЕДОМЛЕНИЕ!\n\n` +
+                                `Акция: ${trigger.securityTicker}\n` +
+                                `Целевая цена: $${trigger.targetPrice.toFixed(2)}\n` +
+                                `Цена срабатывания: $${trigger.triggeredPrice.toFixed(2)}\n` +
+                                `Количество акций: ${operation.quantity} шт.\n` +
+                                `Комиссия: $${(operation.commission || 5.00).toFixed(2)}\n` +
+                                `ИТОГО: $${calculation.totalCost.toFixed(2)}\n\n` +
+                                `${calculation.details || 'Расчет выполнен через Investment API'}\n\n` +
+                                `Время срабатывания: ${trigger.triggerTime.toLocaleString()}\n\n` +
+                                `---\n` +
+                                `Детали операции:\n` +
+                                `• ID операции: #${operation.id}\n` +
+                                `• Исходная цена покупки: $${operation.purchasePricePerShare?.toFixed(2) || 'Не указана'}\n` +
+                                `• Исходная стоимость: $${(operation.totalCost || (operation.quantity * operation.purchasePricePerShare + (operation.commission || 5.00))).toFixed(2)}\n` +
+                                `• Количество: ${operation.quantity} акций\n` +
+                                `• Комиссия: $${(operation.commission || 5.00).toFixed(2)}\n` +
+                                `---\n` +
+                                `Это автоматическое уведомление.\n` +
+                                `С уважением,\nИнвестиционная платформа`;
+
+                            const emailResult = await sendEmailAPI(
+                                emailToSend,
+                                `ТРИГГЕР СРАБОТАЛ! ${trigger.securityTicker} - $${calculation.totalCost.toFixed(2)}`,
+                                emailText
+                            );
+
+                            if (emailResult.success) {
+                                sentCount++;
+                                sentNotifications.add(trigger.triggerId);
+                                saveSentNotifications();
+
+                                if (trigger.id) {
+                                    await markTriggerAsProcessed(trigger.id);
+                                }
+
+                                showToastNotification(
+                                    `Триггер ${trigger.securityTicker} сработал!\n` +
+                                    `Стоимость: $${calculation.totalCost.toFixed(2)}\n` +
+                                    `Письмо отправлено на ${emailToSend}`,
+                                    'success'
+                                );
+                            }
+
+                            await new Promise(resolve => setTimeout(resolve, 500));
+
+                        } catch (triggerError) {
+                            console.error(`Ошибка обработки триггера ${trigger.securityTicker}:`, triggerError);
+                        }
+                    }
+
+                    showResult('triggersResult',
+                        `ПРОВЕРКА ЗАВЕРШЕНА!\n\n` +
+                        `Найдено новых триггеров: ${newTriggers.length}\n` +
+                        `Успешно отправлено: ${sentCount} писем\n` +
+                        `Время: ${new Date().toLocaleString()}\n\n` +
+                        `Всего отслеживаемых уведомлений: ${sentNotifications.size}`,
+                        true
+                    );
+
+                    getActiveTriggers();
+                    getOperations();
+
                 } else {
-                    showResult('emailResult', '⚠️ Некоторые сервисы недоступны', false);
+                    showResult('triggersResult',
+                        `Проверка завершена\n\n` +
+                        `Новых триггеров: 0\n` +
+                        `Всего отслеживаемых уведомлений: ${sentNotifications.size}\n` +
+                        `Время: ${new Date().toLocaleString()}\n` +
+                        `Все триггеры обработаны!`,
+                        true
+                    );
+                }
+
+            } catch (error) {
+                console.error('Критическая ошибка проверки:', error);
+                showResult('triggersResult', `❌ Ошибка проверки: ${error.message}`, false);
+            }
+        }
+
+        async function getActiveTriggers() {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/active-triggers`);
+                const triggers = await response.json();
+
+                const result = document.getElementById('triggersResult');
+                if (triggers && triggers.length > 0) {
+                    result.innerHTML = triggers.map(t => `
+                        <div class="notification">
+                            <strong>${t.securityTicker}</strong><br>
+                            ${t.message}<br>
+                            <small>Цель: $${t.targetPrice} | Текущая: $${t.currentPrice}</small>
+                        </div>
+                    `).join('');
+                } else {
+                    result.innerHTML = 'Нет активных триггеров';
+                    result.className = 'result success';
                 }
             } catch (error) {
-                document.getElementById('investmentStatus').className = 'status-indicator status-inactive';
-                document.getElementById('investmentStatusText').textContent = 'Offline';
-                document.getElementById('emailStatus').className = 'status-indicator status-inactive';
-                document.getElementById('emailStatusText').textContent = 'Offline';
-                showResult('emailResult', '❌ Ошибка проверки статуса', false);
+                console.error('Ошибка загрузки триггеров:', error);
             }
         }
 
-        // Обновление цен
-        function updatePrices() {
-            const security = securities.find(s => s.id == document.getElementById('calcSecurityId').value);
-            if (security) {
-                document.getElementById('calcCurrentPrice').value = security.currentPrice;
-                document.getElementById('opPrice').value = security.currentPrice;
-                // Автоматически устанавливаем целевую цену на 10% ниже текущей
-                document.getElementById('opTargetPrice').value = (security.currentPrice * 0.9).toFixed(2);
+        async function getOperations() {
+            try {
+                const response = await fetch(`${INVESTMENT_API}/operations`);
+                const data = await response.json();
+
+                const result = document.getElementById('operationsResult');
+                if (data && data.length > 0) {
+                    result.innerHTML = data.map(op => `
+                        <div class="notification" style="margin-bottom: 10px;">
+                            <strong>#${op.id} ${op.securityTicker}</strong><br>
+                            ${op.quantity}шт × $${op.purchasePricePerShare?.toFixed(2) || '0.00'}<br>
+                            Итого: $${op.totalCost?.toFixed(2) || '0.00'}<br>
+                            ${op.targetBuyPrice ? `Триггер: $${op.targetBuyPrice.toFixed(2)}` : 'Без триггера'}<br>
+                            ${op.notificationEmail ? `Email: ${op.notificationEmail}` : 'Email не указан'}<br>
+                            ${op.isTriggered ? `Сработал: ${new Date(op.triggeredAt).toLocaleString()}` : 'Ожидает'}
+                        </div>
+                    `).join('');
+                    result.className = 'result success';
+                } else {
+                    result.innerHTML = 'Нет операций';
+                    result.className = 'result';
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки операций:', error);
             }
         }
 
-        // Калькулятор
+        // ========== КАЛЬКУЛЯТОР ==========
+
         async function calculate() {
             const securityId = document.getElementById('calcSecurityId').value;
             const quantity = document.getElementById('calcQuantity').value;
             const price = document.getElementById('calcCurrentPrice').value;
             const commission = document.getElementById('calcCommission').value;
 
-            if (!securityId) return showResult('calcResult', 'Выберите бумагу', false);
+            if (!securityId) return showResult('calcResult', '❌ Выберите бумагу', false);
+            if (!quantity || quantity <= 0) return showResult('calcResult', '❌ Введите корректное количество', false);
+            if (!price || price <= 0) return showResult('calcResult', '❌ Введите корректную цену', false);
 
             try {
                 const response = await fetch(`${INVESTMENT_API}/calculate`, {
@@ -317,230 +953,141 @@
                     })
                 });
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
                 const result = await response.json();
                 const security = securities.find(s => s.id == securityId);
 
                 document.getElementById('calcResult').innerHTML =
-                    `<strong>${security.ticker}: $${result.totalCost}</strong><br>
-                     📊 Количество: ${quantity} акций<br>
-                     💵 Цена: $${price}<br>
-                     📋 Комиссия: $${commission}`;
+                    `<strong>${security.ticker}: $${result.totalCost?.toFixed(2) || 'Ошибка расчета'}</strong><br>
+                     Количество: ${quantity} акций<br>
+                     Цена за акцию: $${parseFloat(price).toFixed(2)}<br>
+                     Комиссия: $${parseFloat(commission).toFixed(2)}<br>
+                     Итого (API): $${result.totalCost?.toFixed(2) || 'Ошибка'}<br>
+                     ${result.triggerMessage ? `${result.triggerMessage}` : ''}<br>
+                     <small>Расчет выполнен через Investment API</small>`;
                 document.getElementById('calcResult').className = 'result success';
 
             } catch (error) {
-                showResult('calcResult', '❌ Ошибка: ' + error.message, false);
+                console.error('Ошибка расчета через API:', error);
+                document.getElementById('calcResult').innerHTML =
+                    `<strong>❌ Ошибка расчета через API</strong><br>
+                     Количество: ${quantity} акций<br>
+                     Цена за акцию: $${parseFloat(price).toFixed(2)}<br>
+                     Комиссия: $${parseFloat(commission).toFixed(2)}<br>
+                     Итого: Ошибка API<br>
+                     <small>❌ Investment API недоступен. Повторите попытку позже.</small>`;
+                document.getElementById('calcResult').className = 'result error';
             }
         }
 
-        // Добавление операции с отправкой email
-        async function addOperation() {
-            const securityId = document.getElementById('opSecurityId').value;
-            const quantity = document.getElementById('opQuantity').value;
-            const price = document.getElementById('opPrice').value;
-            const commission = document.getElementById('opCommission').value;
-            const targetPrice = document.getElementById('opTargetPrice').value;
-            const email = document.getElementById('opEmail').value.trim();
+        // ========== СТАТУС СЕРВИСОВ ==========
 
-            if (!securityId) return showResult('opResult', '❌ Выберите бумагу', false);
-            if (!email || !email.includes('@')) return showResult('opResult', '❌ Введите корректный email', false);
-
-            const operation = {
-                securityId: parseInt(securityId),
-                quantity: parseInt(quantity),
-                purchasePricePerShare: parseFloat(price),
-                commission: parseFloat(commission),
-                targetBuyPrice: parseFloat(targetPrice)
-            };
-
+        async function checkServices() {
             try {
-                showResult('opResult', '🔄 Создаем операцию...', true);
-                
-                // Создаем операцию в инвестиционном API
-                const response = await fetch(`${INVESTMENT_API}/operation`, {
+                const investmentResponse = await fetch(`${INVESTMENT_API}/securities`);
+                const investmentOk = investmentResponse.ok;
+                document.getElementById('investmentStatusIndicator').className = `status-indicator ${investmentOk ? 'status-active' : 'status-inactive'}`;
+                document.getElementById('investmentStatusText').textContent = investmentOk ? 'Online' : 'Offline';
+
+                const fixedEmail = 'kuzminovdaniil4@gmail.com';  
+                const testData = { toEmail: fixedEmail, subject: "Status Check", text: "Service status check" };
+                const emailResponse = await fetch(`${EMAIL_API}/sendEmail`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(operation)
+                    body: JSON.stringify(testData)
                 });
+                const emailOk = emailResponse.status === 201 || emailResponse.ok;
+                document.getElementById('emailServiceStatusIndicator').className = `status-indicator ${emailOk ? 'status-active' : 'status-inactive'}`;
+                document.getElementById('emailServiceStatusText').textContent = emailOk ? 'Online' : 'Offline';
 
-                const result = await response.json();
-                
-                let message = result.message;
-
-                // Отправляем email через ваш API
-                if (result.triggerActivated || true) { // Всегда отправляем email для демонстрации
-                    try {
-                        const emailResponse = await fetch(`${EMAIL_API}/send-email`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                to: email,
-                                subject: `Инвестиционная операция - ${securities.find(s => s.id == securityId).ticker}`,
-                                message: `Создана новая операция:\n\nАкция: ${securities.find(s => s.id == securityId).ticker}\nКоличество: ${quantity}\nЦена покупки: $${price}\nЦелевая цена: $${targetPrice}\nКомиссия: $${commission}\n\nОбщая стоимость: $${(quantity * price + parseFloat(commission)).toFixed(2)}`
-                            })
-                        });
-
-                        const emailResult = await emailResponse.json();
-                        
-                        if (emailResponse.ok) {
-                            message += `\n\n📧 Уведомление отправлено на ${email}`;
-                        } else {
-                            message += `\n\n⚠️ Ошибка отправки email: ${emailResult.message || 'Неизвестная ошибка'}`;
-                        }
-                    } catch (emailError) {
-                        message += `\n\n⚠️ Ошибка соединения с email сервисом`;
-                    }
-                }
-
-                if (result.triggerActivated) {
-                    message += '\n\n🚨 ТРИГГЕР СРАБОТАЛ! Проверьте почту.';
-                }
-
-                showResult('opResult', message, true);
-                
-                // Очищаем поле email после успешной операции
-                document.getElementById('opEmail').value = '';
-                
-            } catch (error) {
-                showResult('opResult', '❌ Ошибка: ' + error.message, false);
-            }
-        }
-
-        // Активные триггеры
-        async function getActiveTriggers() {
-            try {
-                const response = await fetch(`${INVESTMENT_API}/active-triggers`);
-                const triggers = await response.json();
-
-                const result = document.getElementById('triggersResult');
-                if (triggers.length > 0) {
-                    result.innerHTML = triggers.map(t => `
-                        <div class="notification">
-                            <strong>${t.securityTicker}</strong><br>
-                            ${t.message}<br>
-                            <small>🎯 Цель: $${t.targetPrice} | 📊 Текущая: $${t.currentPrice}</small>
-                        </div>
-                    `).join('');
+                if (investmentOk && emailOk) {
+                    showToastNotification('Все сервисы работают корректно!', 'success');
                 } else {
-                    result.innerHTML = '✅ Нет активных триггеров';
-                    result.className = 'result success';
-                }
-
-            } catch (error) {
-                showResult('triggersResult', '❌ Ошибка: ' + error.message, false);
-            }
-        }
-
-        // Проверка всех триггеров
-        async function checkAllTriggers() {
-            try {
-                const response = await fetch(`${INVESTMENT_API}/check-all-triggers`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await response.json();
-                let message = `🔍 Проверено триггеров: ${result.totalChecked}\n`;
-                message += `🚨 Сработало: ${result.activatedTriggers.length}\n`;
-                message += `⏰ Время: ${new Date(result.checkedAt).toLocaleString()}`;
-
-                showResult('triggersResult', message, true);
-
-            } catch (error) {
-                showResult('triggersResult', '❌ Ошибка: ' + error.message, false);
-            }
-        }
-
-        // История операций
-        async function getOperations() {
-            try {
-                const response = await fetch(`${INVESTMENT_API}/operations`);
-                const data = await response.json();
-
-                if (data.length > 0) {
-                    const operationsList = data.map(op => 
-                        `#${op.id} ${op.securityTicker} - ${op.quantity}шт × $${op.purchasePricePerShare} = $${op.totalCost}` +
-                        (op.targetBuyPrice ? ` 🎯 Триггер: $${op.targetBuyPrice}` : '')
-                    ).join('\n');
-                    
-                    showResult('operationsResult', operationsList, true);
-                } else {
-                    showResult('operationsResult', '📭 Нет операций', true);
+                    showToastNotification('Некоторые сервисы недоступны', 'error');
                 }
             } catch (error) {
-                showResult('operationsResult', '❌ Ошибка: ' + error.message, false);
+                document.getElementById('investmentStatusIndicator').className = 'status-indicator status-inactive';
+                document.getElementById('investmentStatusText').textContent = 'Offline';
+                document.getElementById('emailServiceStatusIndicator').className = 'status-indicator status-inactive';
+                document.getElementById('emailServiceStatusText').textContent = 'Offline';
+                showToastNotification('❌ Ошибка проверки статуса', 'error');
             }
         }
 
-        // Отправка тестового письма через ваш API
-        async function sendTestEmail() {
-            const email = document.getElementById('userEmail').value.trim();
-            
-            if (!email || !email.includes('@')) {
-                showResult('emailResult', '❌ Пожалуйста, введите корректный email адрес', false);
-                return;
+
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
+        function startAutoTriggerCheck() {
+            console.log('Автопроверка триггеров запущена (каждые 30 секунд)');
+
+            if (triggerCheckInterval) {
+                clearInterval(triggerCheckInterval);
             }
 
-            try {
-                showResult('emailResult', '🔄 Отправляем тестовое письмо...', true);
-                
-                const response = await fetch(`${EMAIL_API}/send-email`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: email,
-                        subject: 'Тестовое письмо от Инвестиционной платформы',
-                        message: 'Это тестовое письмо подтверждает, что система уведомлений работает корректно! 🎉\n\nВы успешно настроили получение уведомлений о инвестиционных операциях.'
-                    })
-                });
+            setTimeout(() => {
+                checkTriggersAndSendEmails();
+            }, 5000);
 
-                const result = await response.json();
-                
-                if (response.ok) {
-                    showResult('emailResult', 
-                        `✅ Тестовое письмо отправлено на ${email}!\n\nСообщение: ${result.message || 'Письмо успешно отправлено'}`, 
-                        true);
-                    document.getElementById('currentEmail').textContent = email;
-                    document.getElementById('userEmail').value = '';
-                } else {
-                    showResult('emailResult', `❌ Ошибка отправки: ${result.message || 'Неизвестная ошибка'}`, false);
-                }
-            } catch (error) {
-                showResult('emailResult', '❌ Ошибка соединения с email сервисом', false);
-            }
+            triggerCheckInterval = setInterval(() => {
+                checkTriggersAndSendEmails();
+            }, 30000);
         }
 
-        // Вспомогательная функция
-        function showResult(elementId, message, isSuccess) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+        async function forceCheckTriggers() {
+            console.log('Принудительная проверка триггеров');
+            cleanupOldNotifications();
+            await checkTriggersAndSendEmails();
         }
 
-        // Загрузка текущего email статуса
-        async function loadCurrentEmail() {
-            try {
-                const response = await fetch(`${EMAIL_API}/status`);
-                if (response.ok) {
-                    document.getElementById('emailApiStatus').textContent = 'Готов к работе';
-                    document.getElementById('emailApiStatus').style.color = 'green';
-                } else {
-                    document.getElementById('emailApiStatus').textContent = 'Не доступен';
-                    document.getElementById('emailApiStatus').style.color = 'red';
-                }
-            } catch (error) {
-                document.getElementById('emailApiStatus').textContent = 'Ошибка подключения';
-                document.getElementById('emailApiStatus').style.color = 'red';
+        function clearNotificationsHistory() {
+            const confirmed = confirm('Вы уверены, что хотите очистить историю отправленных уведомлений?\n\nЭто может привести к повторной отправке писем для старых триггеров.');
+
+            if (confirmed) {
+                sentNotifications.clear();
+                saveSentNotifications();
+                showToastNotification('История отправленных уведомлений очищена!', 'success');
+
+                showResult('triggersResult',
+                    `ИСТОРИЯ ОЧИЩЕНА\n\n` +
+                    `История отправленных уведомлений удалена\n` +
+                    `Теперь отслеживается: 0 уведомлений\n` +
+                    `Время: ${new Date().toLocaleString()}\n\n` +
+                    `Следующая проверка отправит письма для всех неотправленных триггеров.`,
+                    true
+                );
             }
         }
 
-        // Запуск
-        loadSecurities();
-        checkServices();
-        getActiveTriggers();
-        getOperations();
-        loadCurrentEmail();
+        // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
+
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Инвестиционная платформа запущена!');
+
+            loadSentNotifications();
+            cleanupOldNotifications();
+
+            loadSecurities();
+            getOperations();
+            getActiveTriggers();
+            checkServices();
+
+            const savedEmail = localStorage.getItem('lastUsedEmail');
+            if (savedEmail) {
+                document.getElementById('opEmail').value = savedEmail;
+            }
+
+            updatePricesInRealTime();
+            setInterval(updatePricesInRealTime, 30000);
+
+            startAutoTriggerCheck();
+
+            console.log(`Приложение полностью загружено`);
+            console.log(`Отслеживаем отправленных уведомлений: ${sentNotifications.size}`);
+        });
     </script>
 </body>
 </html>
-
-
