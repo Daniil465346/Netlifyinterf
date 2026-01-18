@@ -1,6 +1,6 @@
 [[redirects]]
   from = "/api/investment/*"
-  to = "http://pr4-daniil465346.amvera.io/api/investment/:splat"
+  to = "http://prrr444-daniil465346.amvera.io/api/investment/:splat"
   status = 200
   force = true
 
