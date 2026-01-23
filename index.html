@@ -283,8 +283,8 @@
     </div>
 
     <script>
-        const INVESTMENT_API = '/api/investment';
-        const EMAIL_API = '/api/email';
+        const INVESTMENT_API = 'https://localhost:7006/api/investment';
+        const EMAIL_API = 'http://neapiemail2-daniil465346.amvera.io';
         let securities = [];
         let sentNotifications = new Set();
 
@@ -743,10 +743,14 @@
                 const sec = securities.find(s => s.id == securityId);
                 showResult('calcResult',
                     `<strong>${sec?.ticker}: $${(result.totalCost || 0).toFixed(2)}</strong><br>` +
-                    `Количество: ${quantity} акций<br>Цена: $${price.toFixed(2)}<br>` +
-                    `Комиссия: $${getNum('calcCommission').toFixed(2)}<br>${result.triggerMessage || ''}`,
+                    `Количество: ${quantity} акций<br>` +
+                    `Цена: $${price.toFixed(2)}<br>` +
+                    `Комиссия: $${getNum('calcCommission').toFixed(2)}<br>` +
+                    `Налог (13%): $${(result.tax || 0).toFixed(2)}<br>` +
+                    `${result.triggerMessage || ''}`,
                     true
                 );
+
             } catch (error) {
                 showResult('calcResult', '❌ Ошибка расчета через API', false);
             }
